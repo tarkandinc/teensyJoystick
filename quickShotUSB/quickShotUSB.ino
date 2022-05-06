@@ -38,6 +38,7 @@ int jY = 1;
 
 #ifdef STATUS_BLINK
 bool ledPin = false;
+int ledCount = 0;
 #endif
 
 //dpad 0 is up
@@ -67,10 +68,15 @@ void handleJoystick()
 #endif
 
 #ifdef STATUS_BLINK
-  if(ledPin=!ledPin)
-    digitalWrite(PIN_STAT, HIGH);
-  else
-    digitalWrite(PIN_STAT, LOW);
+  ledCount++;
+  if(ledCount == 25)
+  {
+    ledCount = 0;
+    if(ledPin=!ledPin)
+      digitalWrite(PIN_STAT, HIGH);
+    else
+      digitalWrite(PIN_STAT, LOW);
+  }
 }
 #endif
 
