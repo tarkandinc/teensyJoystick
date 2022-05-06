@@ -16,18 +16,19 @@
 // UP  DN   LE  RH  5V
 //   F1  F2   CM  0V
 
-#define PIN_UP    0
-#define PIN_DOWN  1
-#define PIN_LEFT  2
-#define PIN_RIGHT 3
-#define PIN_FIRE1 4
-#define PIN_FIRE2 5
+#define PIN_UP    /*0*/ 5
+#define PIN_DOWN  /*1*/ 3
+#define PIN_LEFT  /*2*/ 1
+#define PIN_RIGHT /*3*/ 0
+#define PIN_FIRE1 /*4*/ 4
+#define PIN_FIRE2 /*5*/ 2
 #define PIN_STAT  13
 
 #define HZ_50 20000
 
 #define USB_MANUAL_SEND
 #define STATUS_BLINK
+#define PRINT_DATA
 
 //joystick status
 int jB1 = 0;
@@ -35,6 +36,14 @@ int jB2 = 0;
 int jHat = -1;
 int jX = 1;
 int jY = 1;
+
+#ifdef DEBUG
+int jUp = 1;
+int jDown = 1;
+int jLeft = 1;
+int jRight = 1;
+int jDpad;
+#endif
 
 #ifdef STATUS_BLINK
 bool ledPin = false;
@@ -52,10 +61,22 @@ void handleJoystick()
 {
   //read pins
   jY = digitalRead(PIN_UP);//if up jY=0, not jY=1
-  jY = 2 - digitalRead(PIN_DOWN);//if down jY=2, not jY=1
+  if(jY == 1)
+    jY = 2 - digitalRead(PIN_DOWN);//if down jY=2, not jY=1
   jX = digitalRead(PIN_LEFT);//if left jX=0, not jX=1
-  jX = 2 - digitalRead(PIN_RIGHT);//if right jX=2, not jX=1
-  jHat = jHatLookup [jX][jY];
+  if(jX == 1)
+    jX = 2 - digitalRead(PIN_RIGHT);//if right jX=2, not jX=1
+  jHat = jHatLookup [jY][jX];
+
+#ifdef DEBUG
+  jUp = digitalRead(PIN_UP);
+  jDown = digitalRead(PIN_DOWN);
+  jLeft = digitalRead(PIN_LEFT);
+  jRight = digitalRead(PIN_RIGHT);
+  jDpad = jUp + (jDown << 1) + (jLeft << 2) + (jRight << 3);
+  Serial.println(jDpad);
+#endif
+
   jB1 = 1 - digitalRead(PIN_FIRE1);
   jB2 = 1 - digitalRead(PIN_FIRE2);
   
@@ -65,6 +86,14 @@ void handleJoystick()
   Joystick.hat(jHat);
 #ifdef USB_MANUAL_SEND
   Joystick.send_now();
+#endif
+
+#ifdef PRINT_DATA
+  Serial.print(jHat);
+  Serial.print(":");
+  Serial.print(jB1);
+  Serial.print(",");
+  Serial.println(jB2);
 #endif
 
 #ifdef STATUS_BLINK
@@ -94,6 +123,10 @@ void setup()
   pinMode(PIN_STAT, OUTPUT);
 #endif
 
+#ifdef PRINT_DATA
+  Serial.begin(9600);
+ #endif
+ 
   //joystcik manual send mode
 #ifdef USB_MANUAL_SEND
   Joystick.useManualSend(true);
